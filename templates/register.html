@@ -45,6 +45,37 @@
             box-sizing: border-box;
         }
 
+        .password-input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .password-input-wrapper .form-control {
+            padding-right: 3rem;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 0.75rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #666;
+            font-size: 18px;
+            z-index: 10;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .password-toggle:hover {
+            color: #333;
+        }
+
         .form-control:focus {
             outline: none;
             border-color: #667eea;
@@ -104,6 +135,59 @@
             cursor: not-allowed;
             transform: none;
         }
+
+        .password-strength-meter {
+            margin-top: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .strength-bar {
+            width: 100%;
+            height: 6px;
+            background: #e9ecef;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+
+        .strength-bar-fill {
+            height: 100%;
+            transition: all 0.3s ease;
+            border-radius: 3px;
+        }
+
+        .strength-weak {
+            background: #dc3545;
+            width: 25%;
+        }
+
+        .strength-fair {
+            background: #fd7e14;
+            width: 50%;
+        }
+
+        .strength-good {
+            background: #ffc107;
+            width: 75%;
+        }
+
+        .strength-strong {
+            background: #28a745;
+            width: 100%;
+        }
+
+        .strength-text {
+            font-size: 0.875rem;
+            font-weight: 500;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .strength-weak-text { color: #dc3545; }
+        .strength-fair-text { color: #fd7e14; }
+        .strength-good-text { color: #ffc107; }
+        .strength-strong-text { color: #28a745; }
 
         .password-requirements {
             background: #f8f9fa;
@@ -231,7 +315,21 @@
 
             <div class="form-group">
                 {{ form.password.label(class="form-label") }}
-                {{ form.password(class="form-control") }}
+                <div class="password-input-wrapper">
+                    {{ form.password(class="form-control", type="password") }}
+                    <button type="button" class="password-toggle" id="passwordToggle">👁️</button>
+                </div>
+                
+                <div class="password-strength-meter" id="passwordStrengthMeter" style="display: none;">
+                    <div class="strength-bar">
+                        <div class="strength-bar-fill" id="strengthBarFill"></div>
+                    </div>
+                    <div class="strength-text" id="strengthText">
+                        <span id="strengthLabel">Password Strength</span>
+                        <span id="strengthScore">0/7</span>
+                    </div>
+                </div>
+                
                 <div class="field-errors" id="password_errors"></div>
                 
                 <div class="password-requirements" id="passwordRequirements" style="display: none;">
@@ -268,7 +366,10 @@
 
             <div class="form-group">
                 {{ form.confirm_password.label(class="form-label") }}
-                {{ form.confirm_password(class="form-control") }}
+                <div class="password-input-wrapper">
+                    {{ form.confirm_password(class="form-control", type="password") }}
+                    <button type="button" class="password-toggle" id="confirmPasswordToggle">👁️</button>
+                </div>
                 <div class="field-errors" id="confirm_password_errors"></div>
             </div>
 
@@ -295,6 +396,8 @@
                     confirm_password: document.getElementById('confirm_password')
                 };
                 this.fieldStates = {};
+                this.passwordVisible = false;
+                this.confirmPasswordVisible = false;
                 this.init();
             }
 
@@ -308,15 +411,113 @@
                     
                     if (fieldName === 'password') {
                         field.addEventListener('focus', () => this.showPasswordRequirements());
-                        field.addEventListener('input', () => this.updatePasswordRequirements());
+                        field.addEventListener('input', () => {
+                            this.updatePasswordRequirements();
+                            this.updatePasswordStrength();
+                        });
                     }
                 });
 
+                // Initialize password toggle buttons
+                this.initPasswordToggles();
                 this.updateSubmitButton();
+            }
+
+            initPasswordToggles() {
+                const passwordToggle = document.getElementById('passwordToggle');
+                const confirmPasswordToggle = document.getElementById('confirmPasswordToggle');
+
+                passwordToggle.addEventListener('click', () => this.togglePasswordVisibility('password'));
+                confirmPasswordToggle.addEventListener('click', () => this.togglePasswordVisibility('confirm_password'));
+            }
+
+            togglePasswordVisibility(fieldName) {
+                const field = this.fields[fieldName];
+                const toggleBtn = fieldName === 'password' 
+                    ? document.getElementById('passwordToggle')
+                    : document.getElementById('confirmPasswordToggle');
+
+                if (fieldName === 'password') {
+                    this.passwordVisible = !this.passwordVisible;
+                    field.type = this.passwordVisible ? 'text' : 'password';
+                    toggleBtn.textContent = this.passwordVisible ? '🙈' : '👁️';
+                } else {
+                    this.confirmPasswordVisible = !this.confirmPasswordVisible;
+                    field.type = this.confirmPasswordVisible ? 'text' : 'password';
+                    toggleBtn.textContent = this.confirmPasswordVisible ? '🙈' : '👁️';
+                }
             }
 
             showPasswordRequirements() {
                 document.getElementById('passwordRequirements').style.display = 'block';
+                document.getElementById('passwordStrengthMeter').style.display = 'block';
+            }
+
+            calculatePasswordStrength(password) {
+                const email = this.fields.email.value;
+                const emailLocal = email.split('@')[0];
+
+                const requirements = {
+                    length: password.length >= 12,
+                    uppercase: /[A-Z]/.test(password),
+                    lowercase: /[a-z]/.test(password),
+                    number: /\d/.test(password),
+                    symbol: /[!@#$%^&*()_+\-=\[\]{}|;:,.<>?]/.test(password),
+                    noRepeat: !this.hasRepeatedChars(password),
+                    emailDiff: this.checkEmailDifference(password, emailLocal)
+                };
+
+                const metCount = Object.values(requirements).filter(Boolean).length;
+                
+                let strength = 'weak';
+                let strengthClass = 'strength-weak';
+                let strengthTextClass = 'strength-weak-text';
+
+                if (metCount >= 6) {
+                    strength = 'strong';
+                    strengthClass = 'strength-strong';
+                    strengthTextClass = 'strength-strong-text';
+                } else if (metCount >= 5) {
+                    strength = 'good';
+                    strengthClass = 'strength-good';
+                    strengthTextClass = 'strength-good-text';
+                } else if (metCount >= 3) {
+                    strength = 'fair';
+                    strengthClass = 'strength-fair';
+                    strengthTextClass = 'strength-fair-text';
+                }
+
+                return {
+                    requirements,
+                    metCount,
+                    strength,
+                    strengthClass,
+                    strengthTextClass
+                };
+            }
+
+            updatePasswordStrength() {
+                const password = this.fields.password.value;
+                const strengthMeter = document.getElementById('passwordStrengthMeter');
+                const strengthBarFill = document.getElementById('strengthBarFill');
+                const strengthLabel = document.getElementById('strengthLabel');
+                const strengthScore = document.getElementById('strengthScore');
+
+                if (!password) {
+                    strengthMeter.style.display = 'none';
+                    return;
+                }
+
+                const analysis = this.calculatePasswordStrength(password);
+                
+                // Update strength bar
+                strengthBarFill.className = `strength-bar-fill ${analysis.strengthClass}`;
+                
+                // Update strength text
+                strengthLabel.textContent = `Password Strength: ${analysis.strength.charAt(0).toUpperCase() + analysis.strength.slice(1)}`;
+                strengthLabel.className = analysis.strengthTextClass;
+                strengthScore.textContent = `${analysis.metCount}/7`;
+                strengthScore.className = analysis.strengthTextClass;
             }
 
             updatePasswordRequirements() {
