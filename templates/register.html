@@ -76,6 +76,23 @@
             color: #333;
         }
 
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        .password-toggle:focus {
+            outline: 2px solid #667eea;
+            outline-offset: 2px;
+        }
+
         .form-control:focus {
             outline: none;
             border-color: #667eea;
@@ -296,32 +313,34 @@
             {{ form.hidden_tag() }}
             
             <div class="form-group">
-                {{ form.first_name.label(class="form-label") }}
-                {{ form.first_name(class="form-control") }}
-                <div class="field-errors" id="first_name_errors"></div>
+                {{ form.first_name.label(class="form-label", for="first_name") }}
+                {{ form.first_name(class="form-control", id="first_name", **{"aria-describedby": "first_name_errors", "aria-required": "true", "aria-invalid": "false"}) }}
+                <div class="field-errors" id="first_name_errors" role="alert" aria-live="polite"></div>
             </div>
 
             <div class="form-group">
-                {{ form.last_name.label(class="form-label") }}
-                {{ form.last_name(class="form-control") }}
-                <div class="field-errors" id="last_name_errors"></div>
+                {{ form.last_name.label(class="form-label", for="last_name") }}
+                {{ form.last_name(class="form-control", id="last_name", **{"aria-describedby": "last_name_errors", "aria-required": "true", "aria-invalid": "false"}) }}
+                <div class="field-errors" id="last_name_errors" role="alert" aria-live="polite"></div>
             </div>
 
             <div class="form-group">
-                {{ form.email.label(class="form-label") }}
-                {{ form.email(class="form-control") }}
-                <div class="field-errors" id="email_errors"></div>
+                {{ form.email.label(class="form-label", for="email") }}
+                {{ form.email(class="form-control", id="email", **{"aria-describedby": "email_errors", "aria-required": "true", "aria-invalid": "false"}) }}
+                <div class="field-errors" id="email_errors" role="alert" aria-live="polite"></div>
             </div>
 
             <div class="form-group">
-                {{ form.password.label(class="form-label") }}
+                {{ form.password.label(class="form-label", for="password") }}
                 <div class="password-input-wrapper">
-                    {{ form.password(class="form-control", type="password") }}
-                    <button type="button" class="password-toggle" id="passwordToggle">👁️</button>
+                    {{ form.password(class="form-control", type="password", id="password", **{"aria-describedby": "password_errors passwordStrengthMeter passwordRequirements", "aria-required": "true", "aria-invalid": "false"}) }}
+                    <button type="button" class="password-toggle" id="passwordToggle" aria-label="Toggle password visibility" aria-pressed="false">
+                        <span aria-hidden="true">👁️</span>
+                    </button>
                 </div>
                 
-                <div class="password-strength-meter" id="passwordStrengthMeter" style="display: none;">
-                    <div class="strength-bar">
+                <div class="password-strength-meter" id="passwordStrengthMeter" style="display: none;" role="status" aria-live="polite">
+                    <div class="strength-bar" role="progressbar" aria-valuemin="0" aria-valuemax="7" aria-valuenow="0" aria-label="Password strength">
                         <div class="strength-bar-fill" id="strengthBarFill"></div>
                     </div>
                     <div class="strength-text" id="strengthText">
@@ -330,47 +349,52 @@
                     </div>
                 </div>
                 
-                <div class="field-errors" id="password_errors"></div>
+                <div class="field-errors" id="password_errors" role="alert" aria-live="polite"></div>
                 
-                <div class="password-requirements" id="passwordRequirements" style="display: none;">
-                    <div class="requirement" id="req-length">
-                        <span class="requirement-icon neutral">•</span>
-                        At least 12 characters
-                    </div>
-                    <div class="requirement" id="req-uppercase">
-                        <span class="requirement-icon neutral">•</span>
-                        One uppercase letter
-                    </div>
-                    <div class="requirement" id="req-lowercase">
-                        <span class="requirement-icon neutral">•</span>
-                        One lowercase letter
-                    </div>
-                    <div class="requirement" id="req-number">
-                        <span class="requirement-icon neutral">•</span>
-                        One number
-                    </div>
-                    <div class="requirement" id="req-symbol">
-                        <span class="requirement-icon neutral">•</span>
-                        One symbol (!@#$%^&*()_+-=[]{}|;:,.<>?)
-                    </div>
-                    <div class="requirement" id="req-repeat">
-                        <span class="requirement-icon neutral">•</span>
-                        No 3+ repeated characters
-                    </div>
-                    <div class="requirement" id="req-email-diff">
-                        <span class="requirement-icon neutral">•</span>
-                        Differ from email by 5+ characters
-                    </div>
+                <div class="password-requirements" id="passwordRequirements" style="display: none;" role="region" aria-label="Password requirements">
+                    <h3 id="passwordRequirementsTitle" class="sr-only">Password Requirements</h3>
+                    <ul role="list" aria-labelledby="passwordRequirementsTitle">
+                        <li class="requirement" id="req-length" role="listitem">
+                            <span class="requirement-icon neutral" aria-hidden="true">•</span>
+                            <span>At least 12 characters</span>
+                        </li>
+                        <li class="requirement" id="req-uppercase" role="listitem">
+                            <span class="requirement-icon neutral" aria-hidden="true">•</span>
+                            <span>One uppercase letter</span>
+                        </li>
+                        <li class="requirement" id="req-lowercase" role="listitem">
+                            <span class="requirement-icon neutral" aria-hidden="true">•</span>
+                            <span>One lowercase letter</span>
+                        </li>
+                        <li class="requirement" id="req-number" role="listitem">
+                            <span class="requirement-icon neutral" aria-hidden="true">•</span>
+                            <span>One number</span>
+                        </li>
+                        <li class="requirement" id="req-symbol" role="listitem">
+                            <span class="requirement-icon neutral" aria-hidden="true">•</span>
+                            <span>One symbol (!@#$%^&*()_+-=[]{}|;:,.<>?)</span>
+                        </li>
+                        <li class="requirement" id="req-repeat" role="listitem">
+                            <span class="requirement-icon neutral" aria-hidden="true">•</span>
+                            <span>No 3+ repeated characters</span>
+                        </li>
+                        <li class="requirement" id="req-email-diff" role="listitem">
+                            <span class="requirement-icon neutral" aria-hidden="true">•</span>
+                            <span>Differ from email by 5+ characters</span>
+                        </li>
+                    </ul>
                 </div>
             </div>
 
             <div class="form-group">
-                {{ form.confirm_password.label(class="form-label") }}
+                {{ form.confirm_password.label(class="form-label", for="confirm_password") }}
                 <div class="password-input-wrapper">
-                    {{ form.confirm_password(class="form-control", type="password") }}
-                    <button type="button" class="password-toggle" id="confirmPasswordToggle">👁️</button>
+                    {{ form.confirm_password(class="form-control", type="password", id="confirm_password", **{"aria-describedby": "confirm_password_errors", "aria-required": "true", "aria-invalid": "false"}) }}
+                    <button type="button" class="password-toggle" id="confirmPasswordToggle" aria-label="Toggle confirm password visibility" aria-pressed="false">
+                        <span aria-hidden="true">👁️</span>
+                    </button>
                 </div>
-                <div class="field-errors" id="confirm_password_errors"></div>
+                <div class="field-errors" id="confirm_password_errors" role="alert" aria-live="polite"></div>
             </div>
 
             <div class="form-group">
@@ -429,6 +453,21 @@
 
                 passwordToggle.addEventListener('click', () => this.togglePasswordVisibility('password'));
                 confirmPasswordToggle.addEventListener('click', () => this.togglePasswordVisibility('confirm_password'));
+                
+                // Add keyboard support for password toggles
+                passwordToggle.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        this.togglePasswordVisibility('password');
+                    }
+                });
+                
+                confirmPasswordToggle.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        this.togglePasswordVisibility('confirm_password');
+                    }
+                });
             }
 
             togglePasswordVisibility(fieldName) {
@@ -440,11 +479,19 @@
                 if (fieldName === 'password') {
                     this.passwordVisible = !this.passwordVisible;
                     field.type = this.passwordVisible ? 'text' : 'password';
-                    toggleBtn.textContent = this.passwordVisible ? '🙈' : '👁️';
+                    const icon = toggleBtn.querySelector('span[aria-hidden="true"]');
+                    icon.textContent = this.passwordVisible ? '🙈' : '👁️';
+                    toggleBtn.setAttribute('aria-pressed', this.passwordVisible.toString());
+                    toggleBtn.setAttribute('aria-label', 
+                        this.passwordVisible ? 'Hide password' : 'Show password');
                 } else {
                     this.confirmPasswordVisible = !this.confirmPasswordVisible;
                     field.type = this.confirmPasswordVisible ? 'text' : 'password';
-                    toggleBtn.textContent = this.confirmPasswordVisible ? '🙈' : '👁️';
+                    const icon = toggleBtn.querySelector('span[aria-hidden="true"]');
+                    icon.textContent = this.confirmPasswordVisible ? '🙈' : '👁️';
+                    toggleBtn.setAttribute('aria-pressed', this.confirmPasswordVisible.toString());
+                    toggleBtn.setAttribute('aria-label', 
+                        this.confirmPasswordVisible ? 'Hide confirm password' : 'Show confirm password');
                 }
             }
 
@@ -500,6 +547,7 @@
                 const password = this.fields.password.value;
                 const strengthMeter = document.getElementById('passwordStrengthMeter');
                 const strengthBarFill = document.getElementById('strengthBarFill');
+                const strengthBar = strengthMeter.querySelector('[role="progressbar"]');
                 const strengthLabel = document.getElementById('strengthLabel');
                 const strengthScore = document.getElementById('strengthScore');
 
@@ -510,8 +558,10 @@
 
                 const analysis = this.calculatePasswordStrength(password);
                 
-                // Update strength bar
+                // Update strength bar with proper ARIA attributes
                 strengthBarFill.className = `strength-bar-fill ${analysis.strengthClass}`;
+                strengthBar.setAttribute('aria-valuenow', analysis.metCount);
+                strengthBar.setAttribute('aria-valuetext', `Password strength: ${analysis.strength}, ${analysis.metCount} of 7 requirements met`);
                 
                 // Update strength text
                 strengthLabel.textContent = `Password Strength: ${analysis.strength.charAt(0).toUpperCase() + analysis.strength.slice(1)}`;
@@ -538,13 +588,16 @@
                 Object.keys(requirements).forEach(reqId => {
                     const element = document.getElementById(reqId);
                     const icon = element.querySelector('.requirement-icon');
+                    const text = element.querySelector('span:not(.requirement-icon)');
                     
                     if (requirements[reqId]) {
                         icon.className = 'requirement-icon valid';
                         icon.textContent = '✓';
+                        element.setAttribute('aria-label', `${text.textContent} - met`);
                     } else {
                         icon.className = 'requirement-icon invalid';
                         icon.textContent = '✕';
+                        element.setAttribute('aria-label', `${text.textContent} - not met`);
                     }
                 });
             }
@@ -650,6 +703,7 @@
                 if (errors.length > 0) {
                     field.classList.add('invalid');
                     field.classList.remove('valid');
+                    field.setAttribute('aria-invalid', 'true');
                     
                     errors.forEach(error => {
                         const errorDiv = document.createElement('div');
@@ -660,6 +714,7 @@
                 } else if (field.value.trim()) {
                     field.classList.add('valid');
                     field.classList.remove('invalid');
+                    field.setAttribute('aria-invalid', 'false');
                     
                     const successDiv = document.createElement('div');
                     successDiv.className = 'success-message';
@@ -667,6 +722,7 @@
                     errorsContainer.appendChild(successDiv);
                 } else {
                     field.classList.remove('valid', 'invalid');
+                    field.setAttribute('aria-invalid', 'false');
                 }
             }
 

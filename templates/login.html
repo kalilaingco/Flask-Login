@@ -94,6 +94,54 @@
             color: #999;
         }
 
+        .password-input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .password-input-wrapper .form-control {
+            padding-right: 3rem;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 0.75rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #666;
+            font-size: 18px;
+            z-index: 10;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .password-toggle:hover {
+            color: #333;
+        }
+
+        .password-toggle:focus {
+            outline: 2px solid #667eea;
+            outline-offset: 2px;
+        }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
         .btn-login {
             width: 100%;
             padding: 0.875rem;
@@ -155,6 +203,7 @@
             font-size: 0.9rem;
             display: flex;
             align-items: center;
+            position: relative;
         }
 
         .flash-message.success {
@@ -217,6 +266,28 @@
 
         .forgot-password a:hover {
             text-decoration: underline;
+        }
+
+        .field-errors {
+            margin-top: 0.5rem;
+        }
+
+        .error-message {
+            color: #dc3545;
+            font-size: 0.875rem;
+            margin-bottom: 0.25rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .form-control.invalid {
+            border-color: #dc3545;
+            background-color: #fff8f8;
+        }
+
+        .form-control.valid {
+            border-color: #28a745;
+            background-color: #f8fff9;
         }
 
         /* Loading animation */
@@ -292,34 +363,42 @@
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
                     {% for category, message in messages %}
-                        <div class="flash-message {{ category }}">{{ message }}</div>
+                        <div class="flash-message {{ category }}" role="alert">{{ message }}</div>
                     {% endfor %}
                 {% endif %}
             {% endwith %}
         </div>
 
-        <form method="POST" id="loginForm" novalidate>
+        <form method="POST" id="loginForm" novalidate role="form" aria-label="Login form">
             {{ form.hidden_tag() }}
             
             <div class="form-group">
-                {{ form.username.label(class="form-label") }}
+                {{ form.username.label(class="form-label", for="username") }}
                 <div class="input-icon">
-                    {{ form.username(class="form-control", placeholder="Enter your username") }}
+                    {{ form.username(class="form-control", id="username", placeholder="Enter your username", **{"aria-describedby": "username_errors", "aria-required": "true", "aria-invalid": "false", "autocomplete": "username"}) }}
                 </div>
+                <div class="field-errors" id="username_errors" role="alert" aria-live="polite"></div>
             </div>
 
             <div class="form-group">
-                {{ form.password.label(class="form-label") }}
+                {{ form.password.label(class="form-label", for="password") }}
                 <div class="input-icon">
-                    {{ form.password(class="form-control", placeholder="Enter your password") }}
+                    <div class="password-input-wrapper">
+                        {{ form.password(class="form-control", type="password", id="password", placeholder="Enter your password", **{"aria-describedby": "password_errors", "aria-required": "true", "aria-invalid": "false", "autocomplete": "current-password"}) }}
+                        <button type="button" class="password-toggle" id="passwordToggle" aria-label="Show password" aria-pressed="false">
+                            <span aria-hidden="true">👁️</span>
+                        </button>
+                    </div>
                 </div>
+                <div class="field-errors" id="password_errors" role="alert" aria-live="polite"></div>
                 <div class="forgot-password">
-                    <a href="#" onclick="alert('Contact your administrator to reset your password.')">Forgot password?</a>
+                    <a href="#" role="button" tabindex="0" aria-label="Request password reset" onclick="alert('Contact your administrator to reset your password.')">Forgot password?</a>
                 </div>
             </div>
 
             <div class="form-group">
-                {{ form.submit(class="btn-login", id="submitBtn") }}
+                {{ form.submit(class="btn-login", id="submitBtn", **{"aria-describedby": "login-help"}) }}
+                <div id="login-help" class="sr-only">Click to sign in to your account</div>
             </div>
         </form>
 
@@ -335,6 +414,7 @@
                 this.submitBtn = document.getElementById('submitBtn');
                 this.usernameField = document.getElementById('username');
                 this.passwordField = document.getElementById('password');
+                this.passwordVisible = false;
                 this.init();
             }
 
@@ -351,16 +431,46 @@
                     }
                 });
 
+                // Initialize password toggle
+                this.initPasswordToggle();
+
                 // Enable submit button when both fields have content
                 this.updateSubmitButton();
+            }
+
+            initPasswordToggle() {
+                const passwordToggle = document.getElementById('passwordToggle');
+                
+                passwordToggle.addEventListener('click', () => this.togglePasswordVisibility());
+                
+                // Add keyboard support for password toggle
+                passwordToggle.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        this.togglePasswordVisibility();
+                    }
+                });
+            }
+
+            togglePasswordVisibility() {
+                const toggleBtn = document.getElementById('passwordToggle');
+                
+                this.passwordVisible = !this.passwordVisible;
+                this.passwordField.type = this.passwordVisible ? 'text' : 'password';
+                
+                const icon = toggleBtn.querySelector('span[aria-hidden="true"]');
+                icon.textContent = this.passwordVisible ? '🙈' : '👁️';
+                
+                toggleBtn.setAttribute('aria-pressed', this.passwordVisible.toString());
+                toggleBtn.setAttribute('aria-label', 
+                    this.passwordVisible ? 'Hide password' : 'Show password');
             }
 
             handleInputChange(e) {
                 const field = e.target;
                 
-                // Remove any existing error styling
-                field.style.borderColor = '';
-                field.style.backgroundColor = '';
+                // Clear any existing validation state
+                this.clearFieldError(field);
                 
                 // Update submit button state
                 this.updateSubmitButton();
@@ -377,35 +487,36 @@
                 
                 // Basic client-side validation
                 if (!field.value.trim()) {
-                    this.showFieldError(field, 'This field is required');
+                    this.showFieldError(field, `${field.getAttribute('id')} is required`);
                 } else {
                     this.clearFieldError(field);
                 }
             }
 
             showFieldError(field, message) {
-                field.style.borderColor = '#dc3545';
-                field.style.backgroundColor = '#fff8f8';
+                field.classList.add('invalid');
+                field.classList.remove('valid');
+                field.setAttribute('aria-invalid', 'true');
                 
                 // Remove existing error message
                 this.clearFieldError(field);
                 
                 // Add error message
+                const errorContainer = document.getElementById(`${field.id}_errors`);
                 const errorDiv = document.createElement('div');
-                errorDiv.className = 'field-error';
-                errorDiv.style.cssText = 'color: #dc3545; font-size: 0.875rem; margin-top: 0.25rem;';
+                errorDiv.className = 'error-message';
                 errorDiv.textContent = message;
-                field.parentElement.appendChild(errorDiv);
+                errorContainer.appendChild(errorDiv);
             }
 
             clearFieldError(field) {
-                const existingError = field.parentElement.querySelector('.field-error');
-                if (existingError) {
-                    existingError.remove();
+                const errorContainer = document.getElementById(`${field.id}_errors`);
+                if (errorContainer) {
+                    errorContainer.innerHTML = '';
                 }
                 
-                field.style.borderColor = '';
-                field.style.backgroundColor = '';
+                field.classList.remove('invalid', 'valid');
+                field.setAttribute('aria-invalid', 'false');
             }
 
             updateSubmitButton() {
@@ -414,6 +525,13 @@
                 
                 if (this.submitBtn) {
                     this.submitBtn.disabled = !username || !password;
+                    
+                    // Update ARIA attributes
+                    if (!username || !password) {
+                        this.submitBtn.setAttribute('aria-disabled', 'true');
+                    } else {
+                        this.submitBtn.removeAttribute('aria-disabled');
+                    }
                 }
             }
 
@@ -436,6 +554,14 @@
                 
                 if (hasErrors) {
                     e.preventDefault();
+                    
+                    // Focus on first field with error for accessibility
+                    if (!username && this.usernameField) {
+                        this.usernameField.focus();
+                    } else if (!password && this.passwordField) {
+                        this.passwordField.focus();
+                    }
+                    
                     return false;
                 }
                 
@@ -452,10 +578,14 @@
                 if (this.submitBtn) {
                     if (loading) {
                         this.submitBtn.disabled = true;
-                        this.submitBtn.innerHTML = '<span class="loading"></span>Signing In...';
+                        this.submitBtn.setAttribute('aria-disabled', 'true');
+                        this.submitBtn.innerHTML = '<span class="loading" aria-hidden="true"></span>Signing In...';
+                        this.submitBtn.setAttribute('aria-label', 'Signing in, please wait');
                     } else {
                         this.submitBtn.disabled = false;
+                        this.submitBtn.removeAttribute('aria-disabled');
                         this.submitBtn.innerHTML = 'Sign In';
+                        this.submitBtn.setAttribute('aria-label', 'Sign in to your account');
                     }
                 }
             }
@@ -476,10 +606,23 @@
                 }, index * 100);
             });
             
-            // Focus on first input
+            // Focus on first input for accessibility
             const firstInput = document.querySelector('.form-control');
             if (firstInput) {
                 setTimeout(() => firstInput.focus(), 500);
+            }
+        });
+
+        // Handle forgot password link with keyboard support
+        document.addEventListener('DOMContentLoaded', () => {
+            const forgotLink = document.querySelector('.forgot-password a');
+            if (forgotLink) {
+                forgotLink.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        forgotLink.click();
+                    }
+                });
             }
         });
     </script>
