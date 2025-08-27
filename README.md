@@ -15,3 +15,6 @@ python3 app.py
 
 database is immediately created when the code is ran + 10 test users are populated as well
 
+if you have any questions, I'm happy to demo!!
+Have a nice day!
+
