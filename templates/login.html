@@ -4,17 +4,484 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .login-container {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: #333;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .welcome-text {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #333;
+            font-size: 0.9rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.875rem;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: #fff;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .form-control:hover {
+            border-color: #b0b8d9;
+        }
+
+        .form-control::placeholder {
+            color: #999;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 0.875rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-login:active {
+            transform: translateY(0);
+        }
+
+        .btn-login:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .register-link {
+            text-align: center;
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #eee;
+        }
+
+        .register-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .register-link a:hover {
+            color: #5a6fd8;
+            text-decoration: underline;
+        }
+
+        .flash-messages {
+            margin-bottom: 1.5rem;
+        }
+
+        .flash-message {
+            padding: 0.875rem;
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .flash-message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .flash-message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .flash-message::before {
+            content: '';
+            width: 4px;
+            height: 100%;
+            position: absolute;
+            left: 0;
+            top: 0;
+            border-radius: 8px 0 0 8px;
+        }
+
+        .flash-message.success::before {
+            background: #28a745;
+        }
+
+        .flash-message.error::before {
+            background: #dc3545;
+        }
+
+        .input-icon {
+            position: relative;
+        }
+
+        .input-icon i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+            z-index: 1;
+        }
+
+        .input-icon .form-control {
+            padding-left: 40px;
+        }
+
+        .forgot-password {
+            text-align: right;
+            margin-top: 0.5rem;
+        }
+
+        .forgot-password a {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 0.85rem;
+        }
+
+        .forgot-password a:hover {
+            text-decoration: underline;
+        }
+
+        /* Loading animation */
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive design */
+        @media (max-width: 480px) {
+            .login-container {
+                padding: 2rem 1.5rem;
+                margin: 1rem;
+            }
+
+            h1 {
+                font-size: 1.75rem;
+            }
+        }
+
+        /* Subtle animations */
+        .login-container {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-control {
+            animation: slideIn 0.4s ease-out forwards;
+            opacity: 0;
+        }
+
+        .form-control:nth-child(1) { animation-delay: 0.1s; }
+        .form-control:nth-child(2) { animation-delay: 0.2s; }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+    </style>
 </head>
 <body>
-    <h1> Login Page</h1>
+    <div class="login-container">
+        <h1>Welcome Back</h1>
+        <p class="welcome-text">Please sign in to your account</p>
+        
+        <div class="flash-messages">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="flash-message {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        </div>
 
-    <form method="POST" action="">
-        {{ form.hidden_tag() }}
-        {{ form.username }}
-        {{ form.password }}
-        {{ form.submit }}
-    </form>
+        <form method="POST" id="loginForm" novalidate>
+            {{ form.hidden_tag() }}
+            
+            <div class="form-group">
+                {{ form.username.label(class="form-label") }}
+                <div class="input-icon">
+                    {{ form.username(class="form-control", placeholder="Enter your username") }}
+                </div>
+            </div>
 
-    <a href="{{url_for('register')}} ">Don't have an account? Sign Up</a><br>
+            <div class="form-group">
+                {{ form.password.label(class="form-label") }}
+                <div class="input-icon">
+                    {{ form.password(class="form-control", placeholder="Enter your password") }}
+                </div>
+                <div class="forgot-password">
+                    <a href="#" onclick="alert('Contact your administrator to reset your password.')">Forgot password?</a>
+                </div>
+            </div>
+
+            <div class="form-group">
+                {{ form.submit(class="btn-login", id="submitBtn") }}
+            </div>
+        </form>
+
+        <div class="register-link">
+            <a href="{{ url_for('register') }}">Don't have an account? Sign Up</a>
+        </div>
+    </div>
+
+    <script>
+        class LoginForm {
+            constructor() {
+                this.form = document.getElementById('loginForm');
+                this.submitBtn = document.getElementById('submitBtn');
+                this.usernameField = document.getElementById('username');
+                this.passwordField = document.getElementById('password');
+                this.init();
+            }
+
+            init() {
+                // Add event listeners for better UX
+                this.form.addEventListener('submit', this.handleSubmit.bind(this));
+                
+                // Add input validation feedback
+                [this.usernameField, this.passwordField].forEach(field => {
+                    if (field) {
+                        field.addEventListener('input', this.handleInputChange.bind(this));
+                        field.addEventListener('focus', this.handleFocus.bind(this));
+                        field.addEventListener('blur', this.handleBlur.bind(this));
+                    }
+                });
+
+                // Enable submit button when both fields have content
+                this.updateSubmitButton();
+            }
+
+            handleInputChange(e) {
+                const field = e.target;
+                
+                // Remove any existing error styling
+                field.style.borderColor = '';
+                field.style.backgroundColor = '';
+                
+                // Update submit button state
+                this.updateSubmitButton();
+            }
+
+            handleFocus(e) {
+                const field = e.target;
+                field.parentElement.style.transform = 'scale(1.02)';
+            }
+
+            handleBlur(e) {
+                const field = e.target;
+                field.parentElement.style.transform = 'scale(1)';
+                
+                // Basic client-side validation
+                if (!field.value.trim()) {
+                    this.showFieldError(field, 'This field is required');
+                } else {
+                    this.clearFieldError(field);
+                }
+            }
+
+            showFieldError(field, message) {
+                field.style.borderColor = '#dc3545';
+                field.style.backgroundColor = '#fff8f8';
+                
+                // Remove existing error message
+                this.clearFieldError(field);
+                
+                // Add error message
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'field-error';
+                errorDiv.style.cssText = 'color: #dc3545; font-size: 0.875rem; margin-top: 0.25rem;';
+                errorDiv.textContent = message;
+                field.parentElement.appendChild(errorDiv);
+            }
+
+            clearFieldError(field) {
+                const existingError = field.parentElement.querySelector('.field-error');
+                if (existingError) {
+                    existingError.remove();
+                }
+                
+                field.style.borderColor = '';
+                field.style.backgroundColor = '';
+            }
+
+            updateSubmitButton() {
+                const username = this.usernameField?.value.trim() || '';
+                const password = this.passwordField?.value.trim() || '';
+                
+                if (this.submitBtn) {
+                    this.submitBtn.disabled = !username || !password;
+                }
+            }
+
+            handleSubmit(e) {
+                const username = this.usernameField?.value.trim() || '';
+                const password = this.passwordField?.value.trim() || '';
+                
+                // Basic validation
+                let hasErrors = false;
+                
+                if (!username) {
+                    this.showFieldError(this.usernameField, 'Username is required');
+                    hasErrors = true;
+                }
+                
+                if (!password) {
+                    this.showFieldError(this.passwordField, 'Password is required');
+                    hasErrors = true;
+                }
+                
+                if (hasErrors) {
+                    e.preventDefault();
+                    return false;
+                }
+                
+                // Show loading state
+                this.setLoadingState(true);
+                
+                // Let the form submit naturally, but add a timeout fallback
+                setTimeout(() => {
+                    this.setLoadingState(false);
+                }, 5000);
+            }
+
+            setLoadingState(loading) {
+                if (this.submitBtn) {
+                    if (loading) {
+                        this.submitBtn.disabled = true;
+                        this.submitBtn.innerHTML = '<span class="loading"></span>Signing In...';
+                    } else {
+                        this.submitBtn.disabled = false;
+                        this.submitBtn.innerHTML = 'Sign In';
+                    }
+                }
+            }
+        }
+
+        // Initialize the login form when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new LoginForm();
+        });
+
+        // Add some visual enhancements
+        document.addEventListener('DOMContentLoaded', () => {
+            // Animate form controls
+            const controls = document.querySelectorAll('.form-control');
+            controls.forEach((control, index) => {
+                setTimeout(() => {
+                    control.style.opacity = '1';
+                }, index * 100);
+            });
+            
+            // Focus on first input
+            const firstInput = document.querySelector('.form-control');
+            if (firstInput) {
+                setTimeout(() => firstInput.focus(), 500);
+            }
+        });
+    </script>
 </body>
 </html>

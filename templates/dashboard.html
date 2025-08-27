@@ -3,10 +3,589 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
+    <title>Dashboard - Welcome</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .dashboard-container {
+            background: white;
+            padding: 3rem;
+            border-radius: 20px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+            text-align: center;
+            max-width: 600px;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dashboard-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .welcome-header {
+            margin-bottom: 2rem;
+        }
+
+        .welcome-title {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        .welcome-message {
+            font-size: 1.2rem;
+            color: #666;
+            margin-bottom: 2rem;
+            animation: fadeInUp 0.8s ease-out 0.2s both;
+        }
+
+        .user-info {
+            background: linear-gradient(135deg, #f8f9ff 0%, #f0f2ff 100%);
+            padding: 2rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            border: 1px solid #e1e5f0;
+            animation: fadeInUp 0.8s ease-out 0.4s both;
+        }
+
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2rem;
+            font-weight: bold;
+            animation: scaleIn 0.6s ease-out 0.6s both;
+        }
+
+        .user-details {
+            color: #555;
+        }
+
+        .user-name {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+
+        .user-email {
+            font-size: 1rem;
+            color: #666;
+            margin-bottom: 1rem;
+        }
+
+        .welcome-time {
+            font-size: 0.9rem;
+            color: #888;
+            font-style: italic;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+            animation: fadeInUp 0.8s ease-out 0.6s both;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .btn-logout {
+            background: #ff4757;
+            color: white;
+        }
+
+        .btn-logout:hover {
+            background: #ff3742;
+            transform: translateY(-2px);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+            animation: fadeInUp 0.8s ease-out 0.8s both;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid #e1e5f0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: #ff4757;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            animation: pulse 2s infinite;
+        }
+
+        /* Flash messages */
+        .flash-messages {
+            margin-bottom: 2rem;
+            animation: fadeInDown 0.6s ease-out;
+        }
+
+        .flash-message {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-weight: 500;
+        }
+
+        .flash-message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .flash-message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #b8daff;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            .dashboard-container {
+                padding: 2rem;
+            }
+
+            .welcome-title {
+                font-size: 2.2rem;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .btn {
+                width: 100%;
+                max-width: 250px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .welcome-title {
+                font-size: 1.8rem;
+            }
+
+            .welcome-message {
+                font-size: 1rem;
+            }
+
+            .user-avatar {
+                width: 60px;
+                height: 60px;
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Additional decorative elements */
+        .floating-shapes {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .shape {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .shape:nth-child(1) {
+            width: 80px;
+            height: 80px;
+            top: 20%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+
+        .shape:nth-child(2) {
+            width: 60px;
+            height: 60px;
+            top: 60%;
+            right: 10%;
+            animation-delay: 2s;
+        }
+
+        .shape:nth-child(3) {
+            width: 40px;
+            height: 40px;
+            bottom: 20%;
+            left: 20%;
+            animation-delay: 4s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+    </style>
 </head>
 <body>
-    <p> Welcome back, ! </p>
-    <a href="{{url_for('logout')}}">Press here to logout</a>
+    <div class="floating-shapes">
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+    </div>
+
+    <div class="dashboard-container">
+        <!-- Optional notification badge -->
+        {% if unread_notifications %}
+        <div class="notification-badge">
+            {{ unread_notifications }} new
+        </div>
+        {% endif %}
+
+        <!-- Flash messages -->
+        <div class="flash-messages">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="flash-message {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        </div>
+
+        <div class="welcome-header">
+            <h1 class="welcome-title">Hello, {{ current_user.first_name }}!</h1>
+            <p class="welcome-message">Welcome to your dashboard</p>
+        </div>
+
+        <div class="user-info">
+            <div class="user-avatar">
+                {{ current_user.first_name[0].upper() }}{{ current_user.last_name[0].upper() }}
+            </div>
+            <div class="user-details">
+                <div class="user-name">{{ current_user.first_name }} {{ current_user.last_name }}</div>
+                <div class="user-email">{{ current_user.email }}</div>
+                <div class="welcome-time">
+                    Last login: <span id="currentTime"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Optional stats section -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number">{{ days_since_registration | default(0) }}</div>
+                <div class="stat-label">Days Active</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ login_count | default(1) }}</div>
+                <div class="stat-label">Logins</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ tasks_completed | default(0) }}</div>
+                <div class="stat-label">Tasks Done</div>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <a href="/profile" class="btn btn-primary">View Profile</a>
+            <a href="/settings" class="btn btn-secondary">Settings</a>
+            <a href="/logout" class="btn btn-logout" onclick="return confirm('Are you sure you want to logout?')">Logout</a>
+        </div>
+    </div>
+
+    <script>
+        // Update current time
+        function updateTime() {
+            const now = new Date();
+            const options = { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric', 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            };
+            document.getElementById('currentTime').textContent = now.toLocaleDateString('en-US', options);
+        }
+
+        // Enhanced welcome experience
+        class DashboardWelcome {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.updateTime();
+                this.addWelcomeEffects();
+                this.setupInteractions();
+            }
+
+            updateTime() {
+                const now = new Date();
+                const timeElement = document.getElementById('currentTime');
+                if (timeElement) {
+                    const options = { 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric', 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                    };
+                    timeElement.textContent = now.toLocaleDateString('en-US', options);
+                }
+            }
+
+            addWelcomeEffects() {
+                // Add confetti effect (simple version)
+                this.createConfetti();
+                
+                // Add greeting based on time of day
+                this.updateGreeting();
+            }
+
+            createConfetti() {
+                // Simple confetti effect
+                const colors = ['#667eea', '#764ba2', '#ff4757', '#2ed573', '#ffa502'];
+                const confettiContainer = document.createElement('div');
+                confettiContainer.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    pointer-events: none;
+                    z-index: 1000;
+                `;
+                document.body.appendChild(confettiContainer);
+
+                for (let i = 0; i < 50; i++) {
+                    const confetti = document.createElement('div');
+                    confetti.style.cssText = `
+                        position: absolute;
+                        width: 6px;
+                        height: 6px;
+                        background: ${colors[Math.floor(Math.random() * colors.length)]};
+                        top: -10px;
+                        left: ${Math.random() * 100}%;
+                        border-radius: 50%;
+                        animation: fall ${2 + Math.random() * 3}s linear forwards;
+                    `;
+                    confettiContainer.appendChild(confetti);
+                }
+
+                // Remove confetti after animation
+                setTimeout(() => {
+                    if (confettiContainer.parentNode) {
+                        confettiContainer.parentNode.removeChild(confettiContainer);
+                    }
+                }, 5000);
+            }
+
+            updateGreeting() {
+                const hour = new Date().getHours();
+                const welcomeMessage = document.querySelector('.welcome-message');
+                
+                let greeting = 'Welcome to your dashboard';
+                if (hour < 12) {
+                    greeting = 'Good morning! Ready to start your day?';
+                } else if (hour < 17) {
+                    greeting = 'Good afternoon! Hope your day is going well!';
+                } else {
+                    greeting = 'Good evening! Time to wrap up the day!';
+                }
+                
+                if (welcomeMessage) {
+                    welcomeMessage.textContent = greeting;
+                }
+            }
+
+            setupInteractions() {
+                // Add hover effects to stat cards
+                const statCards = document.querySelectorAll('.stat-card');
+                statCards.forEach(card => {
+                    card.addEventListener('mouseenter', () => {
+                        card.style.transform = 'translateY(-5px) scale(1.02)';
+                    });
+                    
+                    card.addEventListener('mouseleave', () => {
+                        card.style.transform = 'translateY(0) scale(1)';
+                    });
+                });
+
+                // Add click effect to user avatar
+                const avatar = document.querySelector('.user-avatar');
+                if (avatar) {
+                    avatar.addEventListener('click', () => {
+                        avatar.style.transform = 'scale(1.1)';
+                        setTimeout(() => {
+                            avatar.style.transform = 'scale(1)';
+                        }, 200);
+                    });
+                }
+            }
+        }
+
+        // Add CSS for confetti animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fall {
+                to {
+                    transform: translateY(100vh) rotate(360deg);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Initialize dashboard when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new DashboardWelcome();
+        });
+
+        // Update time every minute
+        setInterval(updateTime, 60000);
+    </script>
 </body>
 </html>

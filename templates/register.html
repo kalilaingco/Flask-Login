@@ -4,27 +4,485 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .register-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e1e5e9;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-control.valid {
+            border-color: #28a745;
+            background-color: #f8fff9;
+        }
+
+        .form-control.invalid {
+            border-color: #dc3545;
+            background-color: #fff8f8;
+        }
+
+        .field-errors {
+            margin-top: 0.5rem;
+        }
+
+        .error-message {
+            color: #dc3545;
+            font-size: 0.875rem;
+            margin-bottom: 0.25rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .success-message {
+            color: #28a745;
+            font-size: 0.875rem;
+            margin-bottom: 0.25rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 0.75rem;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-submit:hover:not(:disabled) {
+            background: #5a6fd8;
+            transform: translateY(-1px);
+        }
+
+        .btn-submit:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .password-requirements {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 1rem;
+            margin-top: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .requirement {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .requirement:last-child {
+            margin-bottom: 0;
+        }
+
+        .requirement-icon {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .requirement-icon.valid {
+            background: #28a745;
+            color: white;
+        }
+
+        .requirement-icon.invalid {
+            background: #dc3545;
+            color: white;
+        }
+
+        .requirement-icon.neutral {
+            background: #e9ecef;
+            color: #6c757d;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: #333;
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+
+        .login-link a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+
+        .flash-messages {
+            margin-bottom: 1rem;
+        }
+
+        .flash-message {
+            padding: 0.75rem;
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+        }
+
+        .flash-message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .flash-message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
 </head>
 <body>
-    <h1>Sign Up</h1>
+    <div class="register-container">
+        <h1>Sign Up</h1>
+        
+        <div class="flash-messages">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="flash-message {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        </div>
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div style="color: {{ 'red' if category == 'error' else 'green' }};">
-                    {{ message }}
+        <form method="POST" id="registerForm" novalidate>
+            {{ form.hidden_tag() }}
+            
+            <div class="form-group">
+                {{ form.first_name.label(class="form-label") }}
+                {{ form.first_name(class="form-control") }}
+                <div class="field-errors" id="first_name_errors"></div>
+            </div>
+
+            <div class="form-group">
+                {{ form.last_name.label(class="form-label") }}
+                {{ form.last_name(class="form-control") }}
+                <div class="field-errors" id="last_name_errors"></div>
+            </div>
+
+            <div class="form-group">
+                {{ form.email.label(class="form-label") }}
+                {{ form.email(class="form-control") }}
+                <div class="field-errors" id="email_errors"></div>
+            </div>
+
+            <div class="form-group">
+                {{ form.password.label(class="form-label") }}
+                {{ form.password(class="form-control") }}
+                <div class="field-errors" id="password_errors"></div>
+                
+                <div class="password-requirements" id="passwordRequirements" style="display: none;">
+                    <div class="requirement" id="req-length">
+                        <span class="requirement-icon neutral">•</span>
+                        At least 12 characters
+                    </div>
+                    <div class="requirement" id="req-uppercase">
+                        <span class="requirement-icon neutral">•</span>
+                        One uppercase letter
+                    </div>
+                    <div class="requirement" id="req-lowercase">
+                        <span class="requirement-icon neutral">•</span>
+                        One lowercase letter
+                    </div>
+                    <div class="requirement" id="req-number">
+                        <span class="requirement-icon neutral">•</span>
+                        One number
+                    </div>
+                    <div class="requirement" id="req-symbol">
+                        <span class="requirement-icon neutral">•</span>
+                        One symbol (!@#$%^&*()_+-=[]{}|;:,.<>?)
+                    </div>
+                    <div class="requirement" id="req-repeat">
+                        <span class="requirement-icon neutral">•</span>
+                        No 3+ repeated characters
+                    </div>
+                    <div class="requirement" id="req-email-diff">
+                        <span class="requirement-icon neutral">•</span>
+                        Differ from email by 5+ characters
+                    </div>
                 </div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
+            </div>
 
-    <form method="POST" action="">
-        {{ form.hidden_tag() }}
-        {{ form.username }}
-        {{ form.password }}
-        {{ form.submit }}
-    </form>
+            <div class="form-group">
+                {{ form.confirm_password.label(class="form-label") }}
+                {{ form.confirm_password(class="form-control") }}
+                <div class="field-errors" id="confirm_password_errors"></div>
+            </div>
 
-    <a href="{{url_for('login')}} ">Already have an account? Login</a><br>
+            <div class="form-group">
+                {{ form.submit(class="btn-submit", disabled=true, id="submitBtn") }}
+            </div>
+        </form>
+
+        <div class="login-link">
+            <a href="{{ url_for('login') }}">Already have an account? Login</a>
+        </div>
+    </div>
+
+    <script>
+        class FormValidator {
+            constructor() {
+                this.form = document.getElementById('registerForm');
+                this.submitBtn = document.getElementById('submitBtn');
+                this.fields = {
+                    first_name: document.getElementById('first_name'),
+                    last_name: document.getElementById('last_name'),
+                    email: document.getElementById('email'),
+                    password: document.getElementById('password'),
+                    confirm_password: document.getElementById('confirm_password')
+                };
+                this.fieldStates = {};
+                this.init();
+            }
+
+            init() {
+                Object.keys(this.fields).forEach(fieldName => {
+                    const field = this.fields[fieldName];
+                    this.fieldStates[fieldName] = { valid: false, errors: [] };
+                    
+                    field.addEventListener('input', () => this.validateField(fieldName));
+                    field.addEventListener('blur', () => this.validateField(fieldName));
+                    
+                    if (fieldName === 'password') {
+                        field.addEventListener('focus', () => this.showPasswordRequirements());
+                        field.addEventListener('input', () => this.updatePasswordRequirements());
+                    }
+                });
+
+                this.updateSubmitButton();
+            }
+
+            showPasswordRequirements() {
+                document.getElementById('passwordRequirements').style.display = 'block';
+            }
+
+            updatePasswordRequirements() {
+                const password = this.fields.password.value;
+                const email = this.fields.email.value;
+                const emailLocal = email.split('@')[0];
+
+                const requirements = {
+                    'req-length': password.length >= 12,
+                    'req-uppercase': /[A-Z]/.test(password),
+                    'req-lowercase': /[a-z]/.test(password),
+                    'req-number': /\d/.test(password),
+                    'req-symbol': /[!@#$%^&*()_+\-=\[\]{}|;:,.<>?]/.test(password),
+                    'req-repeat': !this.hasRepeatedChars(password),
+                    'req-email-diff': this.checkEmailDifference(password, emailLocal)
+                };
+
+                Object.keys(requirements).forEach(reqId => {
+                    const element = document.getElementById(reqId);
+                    const icon = element.querySelector('.requirement-icon');
+                    
+                    if (requirements[reqId]) {
+                        icon.className = 'requirement-icon valid';
+                        icon.textContent = '✓';
+                    } else {
+                        icon.className = 'requirement-icon invalid';
+                        icon.textContent = '✕';
+                    }
+                });
+            }
+
+            hasRepeatedChars(str) {
+                for (let i = 0; i < str.length - 2; i++) {
+                    if (str[i] === str[i+1] && str[i] === str[i+2]) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            checkEmailDifference(password, emailLocal) {
+                if (!emailLocal || emailLocal.length === 0) return password.length >= 5;
+                
+                const pwd = password.toLowerCase();
+                const email = emailLocal.toLowerCase();
+                
+                let differences = 0;
+                const minLen = Math.min(pwd.length, email.length);
+                
+                for (let i = 0; i < minLen; i++) {
+                    if (pwd[i] !== email[i]) differences++;
+                }
+                
+                differences += Math.abs(pwd.length - email.length);
+                return differences >= 5;
+            }
+
+            async validateField(fieldName) {
+                const field = this.fields[fieldName];
+                const value = field.value.trim();
+                const errors = [];
+
+                // Basic validation
+                if (!value && fieldName !== 'confirm_password') {
+                    errors.push(`${fieldName.replace('_', ' ')} is required`);
+                }
+
+                // Field-specific validation
+                if (value) {
+                    switch (fieldName) {
+                        case 'first_name':
+                        case 'last_name':
+                            if (value.length > 50) errors.push('Must be 50 characters or less');
+                            break;
+                        
+                        case 'email':
+                            if (!value.endsWith('@getcovered.io')) {
+                                errors.push('Email must be a @getcovered.io address');
+                            }
+                            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+                                errors.push('Invalid email format');
+                            }
+                            break;
+                        
+                        case 'password':
+                            errors.push(...this.validatePassword(value));
+                            break;
+                        
+                        case 'confirm_password':
+                            if (value !== this.fields.password.value) {
+                                errors.push('Passwords do not match');
+                            }
+                            break;
+                    }
+                }
+
+                this.fieldStates[fieldName] = {
+                    valid: errors.length === 0 && (value || fieldName === 'confirm_password'),
+                    errors: errors
+                };
+
+                this.updateFieldUI(fieldName, errors);
+                this.updateSubmitButton();
+            }
+
+            validatePassword(password) {
+                const errors = [];
+                const email = this.fields.email.value;
+                const emailLocal = email.split('@')[0];
+
+                if (password.length < 12) errors.push('Must be at least 12 characters');
+                if (!/[A-Z]/.test(password)) errors.push('Must contain uppercase letter');
+                if (!/[a-z]/.test(password)) errors.push('Must contain lowercase letter');
+                if (!/\d/.test(password)) errors.push('Must contain a number');
+                if (!/[!@#$%^&*()_+\-=\[\]{}|;:,.<>?]/.test(password)) errors.push('Must contain a symbol');
+                if (this.hasRepeatedChars(password)) errors.push('Cannot have 3+ repeated characters');
+                if (!this.checkEmailDifference(password, emailLocal)) {
+                    errors.push('Must differ from email by 5+ characters');
+                }
+
+                return errors;
+            }
+
+            updateFieldUI(fieldName, errors) {
+                const field = this.fields[fieldName];
+                const errorsContainer = document.getElementById(`${fieldName}_errors`);
+                
+                errorsContainer.innerHTML = '';
+                
+                if (errors.length > 0) {
+                    field.classList.add('invalid');
+                    field.classList.remove('valid');
+                    
+                    errors.forEach(error => {
+                        const errorDiv = document.createElement('div');
+                        errorDiv.className = 'error-message';
+                        errorDiv.textContent = error;
+                        errorsContainer.appendChild(errorDiv);
+                    });
+                } else if (field.value.trim()) {
+                    field.classList.add('valid');
+                    field.classList.remove('invalid');
+                    
+                    const successDiv = document.createElement('div');
+                    successDiv.className = 'success-message';
+                    successDiv.textContent = '✓ Valid';
+                    errorsContainer.appendChild(successDiv);
+                } else {
+                    field.classList.remove('valid', 'invalid');
+                }
+            }
+
+            updateSubmitButton() {
+                const allValid = Object.values(this.fieldStates).every(state => state.valid);
+                const allFilled = Object.keys(this.fields).every(fieldName => 
+                    this.fields[fieldName].value.trim() !== ''
+                );
+
+                this.submitBtn.disabled = !(allValid && allFilled);
+            }
+        }
+
+        // Initialize form validator when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new FormValidator();
+        });
+    </script>
 </body>
 </html>
