@@ -2,13 +2,13 @@
 
 make sure to have these installed 
 
--flask 
--flask_sqlalchemy 
--flask_login 
--flask_bcrypt 
--flask-WTF 
--wtforms 
--email_validator 
+- flask 
+- flask_sqlalchemy 
+- flask_login 
+- flask_bcrypt 
+- flask-WTF 
+- wtforms 
+- email_validator 
 
 To run:
 python3 app.py
