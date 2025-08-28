@@ -4,56 +4,45 @@ from flask import Flask, render_template, url_for, redirect, flash, request, jso
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user, current_user 
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField
-from wtforms.validators import InputRequired, Length, ValidationError
+from wtforms import StringField, PasswordField, SubmitField, EmailField
+from wtforms.validators import InputRequired, Length, ValidationError, Email
 from flask_bcrypt import Bcrypt
-from wtforms import EmailField
-from wtforms.validators import Email
 from datetime import datetime
-from urllib.parse import urlparse
-import sqlite3
 
-
+# Load environment variables
+load_dotenv()
 
 app = Flask(__name__, template_folder='templates')
 
-load_dotenv()
-
+# Configure Flask for Vercel's read-only filesystem
 if os.environ.get('VERCEL'):
-    # Use /tmp which is writable on Vercel
     app.instance_path = '/tmp'
-else:
-    # Use default instance path for local development
-    pass
 
+# Database configuration - PostgreSQL only
+database_url = os.environ.get('DATABASE_URL')
+if not database_url:
+    raise ValueError("DATABASE_URL environment variable is required")
 
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('SQLITE_URL')
+# Convert postgres:// to postgresql:// for SQLAlchemy compatibility
+if database_url.startswith('postgres://'):
+    database_url = database_url.replace('postgres://', 'postgresql://', 1)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Configure connection pooling for serverless
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    'pool_pre_ping': True,
+    'pool_recycle': 300,
+    'pool_timeout': 20,
+    'max_overflow': 0
+}
 
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
 
-# Database configuration
-database_url = os.environ.get('DATABASE_URL')
-
-if database_url:
-    # Parse the database URL for cloud deployment
-    if database_url.startswith('postgres://'):
-        database_url = database_url.replace('postgres://', 'postgresql://', 1)
-    app.config['SQLALCHEMY_DATABASE_URI'] = database_url
-else:
-    # Local development fallback
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
-
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-# Update template and static folder paths for Vercel
-#template_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), 'templates'))
-#tatic_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), 'static'))
-
-#app = Flask(__name__)
-
+# Login manager setup
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
@@ -101,11 +90,9 @@ class RegisterForm(FlaskForm):
     submit = SubmitField("Create Account")
     
     def validate_email(self, email):
-        # Check if email domain is @getcovered.io
         if not email.data.endswith('@getcovered.io'):
             raise ValidationError('Email must be a @getcovered.io address')
         
-        # Check if email already exists
         existing_user = User.query.filter_by(email=email.data.lower()).first()
         if existing_user:
             raise ValidationError('An account with this email already exists')
@@ -113,11 +100,9 @@ class RegisterForm(FlaskForm):
     def validate_password(self, password):
         pwd = password.data
         
-        # Length check
         if len(pwd) < 12:
             raise ValidationError('Password must be at least 12 characters long')
         
-        # Character type checks
         has_upper = any(c.isupper() for c in pwd)
         has_lower = any(c.islower() for c in pwd)
         has_digit = any(c.isdigit() for c in pwd)
@@ -132,26 +117,21 @@ class RegisterForm(FlaskForm):
         if not has_symbol:
             raise ValidationError('Password must contain at least one symbol')
         
-        # Check for repeated characters (3 or more in a row)
         for i in range(len(pwd) - 2):
             if pwd[i] == pwd[i+1] == pwd[i+2]:
                 raise ValidationError('Password cannot contain 3 or more repeated characters in a row')
         
-        # Check difference from email local part
         if hasattr(self, 'email') and self.email.data:
             email_local = self.email.data.split('@')[0].lower()
             pwd_lower = pwd.lower()
             
-            # Calculate character differences
             different_chars = 0
             min_len = min(len(email_local), len(pwd_lower))
             
-            # Count different characters at same positions
             for i in range(min_len):
                 if email_local[i] != pwd_lower[i]:
                     different_chars += 1
             
-            # Add extra characters if lengths differ
             different_chars += abs(len(email_local) - len(pwd_lower))
             
             if different_chars < 5:
@@ -161,7 +141,6 @@ class RegisterForm(FlaskForm):
         if self.password.data != confirm_password.data:
             raise ValidationError('Passwords do not match')
 
-# Updated LoginForm to use email instead of username
 class LoginForm(FlaskForm):
     username = EmailField('Email', validators=[
         InputRequired(message="Email is required"),
@@ -185,11 +164,9 @@ def login():
     form = LoginForm()
     
     if form.validate_on_submit():
-        # Look up user by email (form field is named 'username' but contains email)
         user = User.query.filter_by(email=form.username.data.lower().strip()).first()
         
         if user and bcrypt.check_password_hash(user.password, form.password.data):
-            # Update login count
             user.login_count = (user.login_count or 0) + 1
             db.session.commit()
             
@@ -207,10 +184,8 @@ def register():
     
     if form.validate_on_submit():
         try:
-            # Hash the password
             hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
             
-            # Create new user
             new_user = User(
                 first_name=form.first_name.data.strip(),
                 last_name=form.last_name.data.strip(),
@@ -235,7 +210,6 @@ def register():
 @app.route('/api/dashboard')
 @login_required
 def dashboard():
-    # Calculate days since registration
     if current_user.created_at:
         days_since_registration = (datetime.utcnow() - current_user.created_at).days
     else:
@@ -244,10 +218,10 @@ def dashboard():
     return render_template('dashboard.html', 
                          days_since_registration=days_since_registration,
                          login_count=current_user.login_count or 1,
-                         tasks_completed=0)  # You can add task tracking later
+                         tasks_completed=0)
 
 @app.route('/api/settings')
-@app.route('/api/profile')  # Alternative URL
+@app.route('/api/profile')
 @login_required
 def settings():
     return render_template('settings.html')
@@ -259,11 +233,9 @@ def logout():
     logout_user()
     return redirect(url_for('home'))
 
-# API Routes for profile management
 @app.route('/api/profile', methods=['GET'])
 @login_required
 def get_profile():
-    """API endpoint to get current user profile data"""
     return jsonify({
         'first_name': current_user.first_name,
         'last_name': current_user.last_name,
@@ -275,14 +247,12 @@ def get_profile():
 @app.route('/api/profile', methods=['PUT'])
 @login_required
 def update_profile():
-    """API endpoint to update user profile"""
     try:
         data = request.get_json()
         
         if not data:
             return jsonify({'message': 'No data provided'}), 400
         
-        # Validate required fields
         first_name = data.get('first_name', '').strip()
         last_name = data.get('last_name', '').strip()
         
@@ -292,7 +262,6 @@ def update_profile():
         if len(first_name) > 50 or len(last_name) > 50:
             return jsonify({'message': 'Names must be 50 characters or less'}), 400
         
-        # Update user data
         current_user.first_name = first_name
         current_user.last_name = last_name
         
@@ -309,6 +278,21 @@ def update_profile():
         app.logger.error(f'Profile update error: {str(e)}')
         return jsonify({'message': 'Failed to update profile'}), 500
 
+# Database initialization route (temporary - remove after first deployment)
+@app.route('/init-db')
+def init_db():
+    try:
+        with app.app_context():
+            db.create_all()
+        return "Database initialized successfully"
+    except Exception as e:
+        return f"Error initializing database: {str(e)}"
+
+# Health check route
+@app.route('/health')
+def health():
+    return {'status': 'ok', 'message': 'App is running'}
+
 # Error handlers
 @app.errorhandler(404)
 def not_found_error(error):
@@ -319,15 +303,12 @@ def internal_error(error):
     db.session.rollback()
     return render_template('500.html'), 500
 
-# Context processor to make current_user available in all templates
 @app.context_processor
 def inject_user():
     return dict(current_user=current_user)
 
-# Template filters
 @app.template_filter('days_ago')
 def days_ago_filter(date):
-    """Calculate days ago from a datetime"""
     if not date:
         return 'Unknown'
     delta = datetime.utcnow() - date
@@ -338,70 +319,9 @@ def days_ago_filter(date):
     else:
         return f'{delta.days} days ago'
 
-if __name__ == '__main__':
-    if not os.environ.get('VERCEL'):
-        with app.app_context():
-            db.create_all()
-            print("Database tables created successfully!")
-
-        
-        # Create 10 test users for development
-with app.app_context():
-    test_users_data = [
-        {'first_name': 'John', 'last_name': 'Smith', 'email': 'john.smith@getcovered.io'},
-        {'first_name': 'Sarah', 'last_name': 'Johnson', 'email': 'sarah.johnson@getcovered.io'},
-        {'first_name': 'Michael', 'last_name': 'Brown', 'email': 'michael.brown@getcovered.io'},
-        {'first_name': 'Emily', 'last_name': 'Davis', 'email': 'emily.davis@getcovered.io'},
-        {'first_name': 'David', 'last_name': 'Wilson', 'email': 'david.wilson@getcovered.io'},
-        {'first_name': 'Jessica', 'last_name': 'Miller', 'email': 'jessica.miller@getcovered.io'},
-        {'first_name': 'Christopher', 'last_name': 'Garcia', 'email': 'christopher.garcia@getcovered.io'},
-        {'first_name': 'Amanda', 'last_name': 'Martinez', 'email': 'amanda.martinez@getcovered.io'},
-        {'first_name': 'Robert', 'last_name': 'Anderson', 'email': 'robert.anderson@getcovered.io'},
-        {'first_name': 'Lisa', 'last_name': 'Taylor', 'email': 'lisa.taylor@getcovered.io'}
-    ]
-
-    users_created = 0
-    users_skipped = 0
-
-    for user_data in test_users_data:
-        test_user = User.query.filter_by(email=user_data['email']).first()
-        if not test_user:
-            hashed_password = bcrypt.generate_password_hash('TestPassword123!').decode('utf-8')
-            test_user = User(
-                first_name=user_data['first_name'],
-                last_name=user_data['last_name'],
-                email=user_data['email'],
-                password=hashed_password,
-                login_count=0
-            )
-            db.session.add(test_user)
-            users_created += 1
-            print(f"Test user created: {user_data['email']} / TestPassword123!")
-        else:
-            users_skipped += 1
-            print(f"Test user already exists: {user_data['email']}")
-
-    if users_created > 0:
-        db.session.commit()
-        print(f"\nTest user creation complete! Created {users_created} users, skipped {users_skipped} existing users.")
-    else:
-        print(f"\nAll {len(test_users_data)} test users already exist.")
-
-def migrate_sqlite_to_postgres():
-    # Connect to SQLite
-    sqlite_conn = sqlite3.connect('users.db')
-    cursor = sqlite_conn.cursor()
-    
-    # Get data from SQLite
-    cursor.execute("SELECT * FROM user")
-    users = cursor.fetchall()
-    
-    # Insert into new database using SQLAlchemy
-    # (Run this locally with your new DATABASE_URL)
-    for user_data in users:
-        # Create User objects and add to new database
-        pass
-
+# Export app for Vercel
 app = app
 
-app.run(debug=True)
+# For local development only
+if __name__ == '__main__':
+    app.run(debug=True)
