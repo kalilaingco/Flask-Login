@@ -1,3 +1,5 @@
+import os
+from dotenv import load_dotenv
 from flask import Flask, render_template, url_for, redirect, flash, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user, current_user 
@@ -11,14 +13,23 @@ from datetime import datetime
 import re
 
 
-app = Flask(__name__)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
-app.config['SECRET_KEY'] = 'plzhireme'
+app = Flask(__name__, template_folder='templates')
+
+load_dotenv()
+
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
+
+# Update template and static folder paths for Vercel
+#template_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), 'templates'))
+#tatic_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), 'static'))
+
+#app = Flask(__name__)
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -146,7 +157,7 @@ class LoginForm(FlaskForm):
 def home():
     return render_template('home.html')
 
-@app.route('/login', methods=['GET', 'POST'])
+@app.route('/api/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
     
@@ -167,7 +178,7 @@ def login():
     
     return render_template('login.html', form=form)
 
-@app.route('/register', methods=['GET', 'POST'])
+@app.route('/api/register', methods=['GET', 'POST'])
 def register():
     form = RegisterForm()
     
@@ -198,7 +209,7 @@ def register():
     
     return render_template('register.html', form=form)
 
-@app.route('/dashboard')
+@app.route('/api/dashboard')
 @login_required
 def dashboard():
     # Calculate days since registration
@@ -212,13 +223,13 @@ def dashboard():
                          login_count=current_user.login_count or 1,
                          tasks_completed=0)  # You can add task tracking later
 
-@app.route('/settings')
-@app.route('/profile')  # Alternative URL
+@app.route('/api/settings')
+@app.route('/api/profile')  # Alternative URL
 @login_required
 def settings():
     return render_template('settings.html')
 
-@app.route('/logout')
+@app.route('/api/logout')
 @login_required
 def logout():
     flash(f'Goodbye, {current_user.first_name}! You have been logged out successfully.', 'info')
@@ -351,5 +362,7 @@ with app.app_context():
         print(f"\nTest user creation complete! Created {users_created} users, skipped {users_skipped} existing users.")
     else:
         print(f"\nAll {len(test_users_data)} test users already exist.")
-    
+
+app = app
+
 app.run(debug=True)
