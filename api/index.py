@@ -288,20 +288,6 @@ def init_db():
     except Exception as e:
         return f"Error initializing database: {str(e)}"
 
-# Health check route
-@app.route('/health')
-def health():
-    return {'status': 'ok', 'message': 'App is running'}
-
-# Error handlers
-@app.errorhandler(404)
-def not_found_error(error):
-    return render_template('404.html'), 404
-
-@app.errorhandler(500)
-def internal_error(error):
-    db.session.rollback()
-    return render_template('500.html'), 500
 
 @app.context_processor
 def inject_user():
