@@ -333,7 +333,7 @@ def days_ago_filter(date):
 if __name__ == '__main__':
     if not os.environ.get('VERCEL'):
         with app.app_context():
-            db.create_all()
+            #db.create_all()
             print("Database tables created successfully!")
 
         
