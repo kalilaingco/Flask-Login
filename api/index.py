@@ -19,6 +19,14 @@ app = Flask(__name__, template_folder='templates')
 
 load_dotenv()
 
+if os.environ.get('VERCEL'):
+    # Use /tmp which is writable on Vercel
+    app.instance_path = '/tmp'
+else:
+    # Use default instance path for local development
+    pass
+
+
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('SQLITE_URL')
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -333,7 +341,7 @@ def days_ago_filter(date):
 if __name__ == '__main__':
     if not os.environ.get('VERCEL'):
         with app.app_context():
-            #db.create_all()
+            db.create_all()
             print("Database tables created successfully!")
 
         
