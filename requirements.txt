@@ -7,3 +7,4 @@ Flask-Bcrypt==1.0.1
 python-dotenv==1.0.0
 email-validator
 Werkzeug==2.3.7
+psycopg2-binary

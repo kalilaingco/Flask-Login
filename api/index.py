@@ -10,7 +10,8 @@ from flask_bcrypt import Bcrypt
 from wtforms import EmailField
 from wtforms.validators import Email
 from datetime import datetime
-import re
+from urllib.parse import urlparse
+import sqlite3
 
 
 
@@ -18,12 +19,26 @@ app = Flask(__name__, template_folder='templates')
 
 load_dotenv()
 
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('SQLITE_URL')
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
+
+# Database configuration
+database_url = os.environ.get('DATABASE_URL')
+
+if database_url:
+    # Parse the database URL for cloud deployment
+    if database_url.startswith('postgres://'):
+        database_url = database_url.replace('postgres://', 'postgresql://', 1)
+    app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+else:
+    # Local development fallback
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
+
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Update template and static folder paths for Vercel
 #template_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), 'templates'))
@@ -316,9 +331,10 @@ def days_ago_filter(date):
         return f'{delta.days} days ago'
 
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-        print("Database tables created successfully!")
+    if not os.environ.get('VERCEL'):
+        with app.app_context():
+            db.create_all()
+            print("Database tables created successfully!")
 
         
         # Create 10 test users for development
@@ -362,6 +378,21 @@ with app.app_context():
         print(f"\nTest user creation complete! Created {users_created} users, skipped {users_skipped} existing users.")
     else:
         print(f"\nAll {len(test_users_data)} test users already exist.")
+
+def migrate_sqlite_to_postgres():
+    # Connect to SQLite
+    sqlite_conn = sqlite3.connect('users.db')
+    cursor = sqlite_conn.cursor()
+    
+    # Get data from SQLite
+    cursor.execute("SELECT * FROM user")
+    users = cursor.fetchall()
+    
+    # Insert into new database using SQLAlchemy
+    # (Run this locally with your new DATABASE_URL)
+    for user_data in users:
+        # Create User objects and add to new database
+        pass
 
 app = app
 
